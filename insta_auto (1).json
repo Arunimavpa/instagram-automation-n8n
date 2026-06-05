@@ -1,0 +1,338 @@
+{
+  "name": "Sree Narayana Guru Quote Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "InstagramQuotes"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [-768, 96],
+      "id": "68a67064-9dd9-45e4-af84-021bcbd3fe6a",
+      "name": "Get row(s) in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "aca2bf0c-1f5a-45a2-8b29-95e6be5ccaf3",
+              "leftValue": "={{$json[\"status\"]}}",
+              "rightValue": "Pending",
+              "operator": {
+                "type": "string",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [-560, 96],
+      "id": "463ac9e5-5e4f-43e6-82b9-3384d84e9224",
+      "name": "Filter"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [-352, 96],
+      "id": "0099050a-059d-4cc6-928b-7e83d39cedca",
+      "name": "Limit"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://hcti.io/v1/image",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBasicAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "html",
+              "value": "=<html><head><link rel=\"preconnect\" href=\"https://fonts.googleapis.com\"><link href=\"https://fonts.googleapis.com/css2?family=Noto+Sans+Malayalam:wght@400;700&display=swap\" rel=\"stylesheet\"></head><body style=\"margin:0;padding:0;overflow:hidden;width:1080px;height:1350px;\"><div style=\"width:1080px;height:1350px;position:relative;overflow:hidden;\"><img src=\"YOUR_CLOUDINARY_BACKGROUND_IMAGE_URL\" style=\"width:1080px;height:1350px;position:absolute;top:0;left:0;\"/><p style=\"position:absolute;bottom:200px;left:50%;transform:translateX(-50%);width:600px;text-align:center;font-size:40px;color:#8B4513;z-index:999;font-family:'Noto Sans Malayalam',sans-serif;\">{{ $json.quote }}</p></div></body></html>"
+            },
+            {
+              "name": "viewport_width",
+              "value": "1080"
+            },
+            {
+              "name": "viewport_height",
+              "value": "1350"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [-128, 96],
+      "id": "80d9718f-f741-4d9b-97e1-63754689860c",
+      "name": "Generate Image (hcti.io)",
+      "credentials": {
+        "httpBasicAuth": {
+          "id": "YOUR_HCTI_CREDENTIAL_ID",
+          "name": "hcti.io Basic Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "img-url-field",
+              "name": "image_url",
+              "value": "={{$json.url}}",
+              "type": "string"
+            },
+            {
+              "id": "quote-field",
+              "name": "quote",
+              "value": "={{$('Limit').first().json.quote}}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [96, 96],
+      "id": "71ba64ff-a72e-47d4-bad5-cec39d46ea0b",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v25.0",
+        "node": "YOUR_INSTAGRAM_ACCOUNT_ID",
+        "edge": "media",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "image_url",
+                "value": "={{$json.image_url}}"
+              },
+              {
+                "name": "caption",
+                "value": "={{$json.quote}}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [304, -64],
+      "id": "f06dddbf-538d-4487-8e4c-6edea1441643",
+      "name": "Facebook Graph API",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "YOUR_FACEBOOK_GRAPH_CREDENTIAL_ID",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpRequestMethod": "POST",
+        "graphApiVersion": "v25.0",
+        "node": "YOUR_INSTAGRAM_ACCOUNT_ID",
+        "edge": "media_publish",
+        "options": {
+          "queryParameters": {
+            "parameter": [
+              {
+                "name": "creation_id",
+                "value": "={{$json[\"id\"]}}"
+              }
+            ]
+          }
+        }
+      },
+      "type": "n8n-nodes-base.facebookGraphApi",
+      "typeVersion": 1,
+      "position": [544, -64],
+      "id": "617a239d-39d0-4111-b400-770a121c5efd",
+      "name": "Facebook Graph API1",
+      "credentials": {
+        "facebookGraphApi": {
+          "id": "YOUR_FACEBOOK_GRAPH_CREDENTIAL_ID",
+          "name": "Facebook Graph account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "YOUR_GOOGLE_SHEET_ID",
+          "mode": "list",
+          "cachedResultName": "InstagramQuotes"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "row_number": "={{ $('Limit').first().json.row_number }}",
+            "status": "Posted"
+          },
+          "matchingColumns": ["row_number"],
+          "schema": [
+            {
+              "id": "quote",
+              "displayName": "quote",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "status",
+              "displayName": "status",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [784, 0],
+      "id": "cd2d77d2-687d-4dc5-aa6b-d6bce63cc903",
+      "name": "Update row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "YOUR_GOOGLE_SHEETS_CREDENTIAL_ID",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 17
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [-976, 96],
+      "id": "1bb7b576-6ce6-4e72-9805-b6f07eddd82c",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "chatId": "YOUR_TELEGRAM_CHAT_ID",
+        "text": "=✅ Instagram post published successfully\n\nQuote: {{$('Limit').first().json.quote}}\n\nStatus: Posted\nTime: {{$now}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [992, 0],
+      "id": "2ca75671-baca-4546-9ecd-938bc20ca171",
+      "name": "Send a text message",
+      "credentials": {
+        "telegramApi": {
+          "id": "YOUR_TELEGRAM_CREDENTIAL_ID",
+          "name": "Telegram account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [[{"node": "Get row(s) in sheet", "type": "main", "index": 0}]]
+    },
+    "Get row(s) in sheet": {
+      "main": [[{"node": "Filter", "type": "main", "index": 0}]]
+    },
+    "Filter": {
+      "main": [[{"node": "Limit", "type": "main", "index": 0}]]
+    },
+    "Limit": {
+      "main": [[{"node": "Generate Image (hcti.io)", "type": "main", "index": 0}]]
+    },
+    "Generate Image (hcti.io)": {
+      "main": [[{"node": "Edit Fields", "type": "main", "index": 0}]]
+    },
+    "Edit Fields": {
+      "main": [[{"node": "Facebook Graph API", "type": "main", "index": 0}]]
+    },
+    "Facebook Graph API": {
+      "main": [[{"node": "Facebook Graph API1", "type": "main", "index": 0}]]
+    },
+    "Facebook Graph API1": {
+      "main": [[{"node": "Update row in sheet", "type": "main", "index": 0}]]
+    },
+    "Update row in sheet": {
+      "main": [[{"node": "Send a text message", "type": "main", "index": 0}]]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "tags": []
+}
