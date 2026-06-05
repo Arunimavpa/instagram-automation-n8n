@@ -79,23 +79,18 @@ Telegram Bot — send notification
 - Add your quotes in the `quote` column
 - Leave `status` column blank for unposted quotes
 
-### 3. Cloudinary
-- Upload your background image to Cloudinary
-- Copy the Public ID of the image
-- Update the image URL in the Generate Image node
-
-### 4. hcti.io
+### 3. hcti.io
 - Sign up at [hcti.io](https://hcti.io)
 - Get your User ID and API Key from dashboard
 - Add as Basic Auth credential in n8n
 
-### 5. Instagram Graph API
+### 4. Instagram Graph API
 - Create a Facebook Developer App
 - Get your Instagram Account ID
 - Generate a long-lived access token
 - Add as Facebook Graph API credential in n8n
 
-### 6. Import Workflow
+### 5. Import Workflow
 - Download `insta_auto.json`
 - In n8n go to **Import from file**
 - Select the JSON file
